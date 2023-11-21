@@ -12,6 +12,8 @@ def clean_memory():
 
 def set_handlers(logger: logging.Logger, sys_id: int, root_dir:os.PathLike):
     # this function sets handlers for the logger
+    logging_filepath = root_dir / f"results/logs/id{sys_id}.log"
+    logging_filepath.parent.mkdir(parents=True, exist_ok=True)
     logger.root.handlers = [
         logging.StreamHandler(sys.stdout),
         logging.FileHandler(root_dir / f"results/logs/id{sys_id}.log"),

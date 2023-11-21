@@ -20,7 +20,6 @@ class MistralForSeqClassCustom(MistralPreTrainedModel):
         super().__init__(config)
         self.num_labels = config.num_labels
         self.pooler_type_logits = config.pooler_type_logits
-        self.pooler_type_hidden_states = config.pooler_type_hidden_states
         self.use_mlp = config.use_mlp
         self.debug = config.debug
         self.model = MistralModel(config)
@@ -35,7 +34,7 @@ class MistralForSeqClassCustom(MistralPreTrainedModel):
 
     def __repr__(self):
         ret = super().__repr__()
-        ret += f"\npooler_types -- hiddenstates: {self.pooler_type_hidden_states},  logits: {self.pooler_type_logits}"
+        ret += f"\npooler_types -- logits: {self.pooler_type_logits}"
         return ret
 
     def forward(
@@ -92,9 +91,6 @@ class MistralForSeqClassCustom(MistralPreTrainedModel):
                 ).to(hidden_states.device)
             else:
                 sequence_lengths = -1
-        hidden_states = pool_hidden_states(
-            hidden_states, sequence_lengths, self.pooler_type_hidden_states
-        )
         logits = self.score(hidden_states)
 
         pooled_logits = pool_logits(
@@ -149,7 +145,6 @@ class MistralConfigCustom(MistralConfig):
     def __init__(
         self,
         pooler_type_logits: str = "last",
-        pooler_type_hidden_states: str = "none",
         debug: bool = False,
         use_mlp: bool = False,
         vocab_size=32000,
@@ -192,6 +187,5 @@ class MistralConfigCustom(MistralConfig):
             **kwargs,
         )
         self.pooler_type_logits = pooler_type_logits
-        self.pooler_type_hidden_states = pooler_type_hidden_states
         self.debug = debug
         self.use_mlp = use_mlp

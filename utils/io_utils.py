@@ -16,9 +16,6 @@ ROOT_DIR = next(
     None,
 )
 sys.path.append(ROOT_DIR)
-config = configparser.ConfigParser()
-config.read(os.path.join(ROOT_DIR, "config.ini"))
-data_folder = config.get("paths", "path_data")
 
 from transformers import PreTrainedModel
 from peft import PeftModel, PeftConfig

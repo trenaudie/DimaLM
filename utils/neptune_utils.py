@@ -57,10 +57,7 @@ def log_run(
         sys_id: ID of the system run in Neptune
     """
 
-    # Log model configuration details
-    run["setup/use_flash_attention_2"] = HAS_FLASH_ATTN and getattr(
-        model.config, "use_flash_attention_2", False
-    )
+
     run["setup/model_architecture"] = model_name
 
     # Create the experiment name

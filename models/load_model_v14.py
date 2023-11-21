@@ -18,7 +18,6 @@ from transformers import (
 )
 import argparse
 import bitsandbytes as bnb
-import configparser
 import numpy as np
 from itertools import chain
 from pathlib import Path
@@ -31,17 +30,12 @@ ROOT_DIR = next(
 )
 print(f"ROOT_DIR {ROOT_DIR}")
 sys.path.append(str(ROOT_DIR))
-config = configparser.ConfigParser()
-config.read(os.path.join(ROOT_DIR, "config.ini"))
-data_folder = config.get("paths", "path_data")
-
 from models.customMistral import MistralConfigCustom, MistralForSeqClassCustom
 from transformers import BertConfig, BertForSequenceClassification
 from transformers import BertForSequenceClassification, BertConfig
 from transformers import TrainingArguments
 from models.customLLama import (
     LlamaConfigCustom,
-    LlamaForSequenceClassificationMLP,
     LlamaForSequenceClassificationMLP3,
     ShardedLlama,
 )
@@ -92,7 +86,8 @@ def load_model_pretrained(
         print(f"config_llama num labels {config_llama.num_labels}")
         LlamaClass = None
         if mlp_version == 0:
-            LlamaClass = LlamaForSequenceClassificationMLP
+            # LlamaClass = LlamaForSequenceClassificationMLP
+            raise NotImplementedError("MLP0 not supported")
         elif mlp_version == 3:
             LlamaClass = LlamaForSequenceClassificationMLP3
         else:
@@ -119,19 +114,19 @@ def load_model_pretrained(
         mistral_config = MistralConfigCustom.from_pretrained(
             model_name,
             pooler_type_logits=model_args.pooler_type_logits,
-            pooler_type_hidden_states=model_args.pooler_type_hidden_states,
             debug=training_args.is_debug,
             use_mlp=model_args.use_mlp,
             pad_token_id=2,
             device_map=model_args.device_map,
-            torch_dtype=torch.bfloat16 if training_args.bf16 else torch.float16,
-            use_flash_attention_2=HAS_FLASH_ATTN,
         )
-
         model = MistralForSeqClassCustom.from_pretrained(
             model_name,
             config=mistral_config,
+            use_flash_attention_2=HAS_FLASH_ATTN,
+            torch_dtype = torch.bfloat16 if training_args.bf16 else torch.float16,
         )
+
+
     elif "bert" in model_name.lower():
         config = BertConfig.from_pretrained(
             pretrained_model_name_or_path="bert-base-uncased",
@@ -142,7 +137,26 @@ def load_model_pretrained(
             config=config,
             device_map=model_args.device_map,
         )
-    assert model.config.use_cache == False
+    elif "yi" in model_name.lower():
+        print(f"model_name {model_name} - raw from huggingface (no pooler)")
+        from transformers import AutoModelForSequenceClassification, AutoModelForCausalLM
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            torch_dtype=torch.bfloat16 if training_args.bf16 else torch.float16,
+            device_map=model_args.device_map,
+            use_flash_attention_2=HAS_FLASH_ATTN,
+            trust_remote_code=True)
+    else:
+        print(f"model_name {model_name} - raw from huggingface (no pooler)")
+        from transformers import AutoModelForSequenceClassification
+        model = AutoModelForSequenceClassification.from_pretrained(
+            model_name,
+            torch_dtype=torch.bfloat16 if training_args.bf16 else torch.float16,
+            device_map=model_args.device_map,
+            use_flash_attention_2=HAS_FLASH_ATTN,
+            trust_remote_code=True,
+        )
+    # assert model.config.use_cache == False checking if this is ok
     if model_args.lora_dim > 0 and "70b" not in model_args.model_name.lower():
         # do not add lora to Llama 70B
         lora_alpha = 16

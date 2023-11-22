@@ -12,5 +12,18 @@
             "console": "integratedTerminal",
             "justMyCode": false
         },
+        {
+            "name": "pipeline deepspeed",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/.venv/bin/deepspeed",
+            "justMyCode": false,
+            "console": "integratedTerminal",
+            "args": [
+                "--num_nodes=1",
+                "--num_gpus=2",
+                "${file}",
+            ]
+        },
     ]
 }

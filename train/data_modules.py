@@ -352,6 +352,9 @@ def load_dataset_pseudo_label(
             "test": dataset_test,
         }
     )
+    assert len(dataset_full["train"]) > 10
+    assert len(dataset_full["validation"]) > 10
+    assert len(dataset_full["test"]) > 10
     return dataset_full
 
 

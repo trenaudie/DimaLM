@@ -6,7 +6,7 @@ deepspeed train/pipeline7b.py \
     --output_dir "results/model_news_cls_v2" \
     --lora_dim "8" \
     --bf16 \
-    --model_name "meta-llama/Llama-2-7b-hf" \
+    --model_name "TinyLlama/TinyLlama-1.1B-step-50K-105b" \
     --per_device_train_batch_size "4" \
     --per_device_eval_batch_size "4" \
     --pooler_type_logits "last" \

@@ -13,7 +13,7 @@
     "weight_decay": 0.01,
     "learning_rate": 1e-05,
     "num_train_epochs": 2,
-    "eval_steps": 25,
+    "eval_steps": 5,
     "logging_steps": 25,
     "save_steps": 25,
     "output_dir": "/mnt/nvme0n1p1/LLM_project3/results/model_news_cls_v2",

@@ -55,6 +55,11 @@ def compute_metrics(pred):
     acc = (labels == preds).mean()
     return {"accuracy": acc}
 
+
+# %%
+print(f"torch version cuda {torch.version.cuda}")
+
+
 # %% 
 def is_debugger():
     return sys.gettrace() is not None
@@ -93,7 +98,7 @@ def train():
     # %% 
     collator_fn = DataCollatorCustom(tokenizer=dataset_full["train"].tokenizer)
     assert training_args.evaluation_strategy == "steps"
-    assert training_args.eval_steps == 25
+    assert training_args.eval_steps >= 1 and training_args.eval_steps <= 100
     assert len(dataset_full["validation"])>1e3 or (training_args.is_debug and len(dataset_full["validation"])>10)
     trainer = Trainer(
         model=model,
@@ -163,6 +168,10 @@ def train():
     trainer.args.remove_unused_columns = False
     dataloader2 = trainer.get_train_dataloader()
     batch = next(itertools.islice(iter(dataloader2), 10, 11))
+    print(f"batch keys {batch.keys()}")
+
+    dataloader3 = trainer.get_eval_dataloader()
+    batch = next(itertools.islice(iter(dataloader3), 10, 11))
     print(f"batch keys {batch.keys()}")
 
     # %%

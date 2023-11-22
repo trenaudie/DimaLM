@@ -37,6 +37,7 @@ from data_modules import DataCollatorCustom, load_dataset_pseudo_label
 from arg_classes import ModelArguments, DataArguments, TrainingArguments, make_default_args
 from transformers.modeling_outputs import SequenceClassifierOutputWithPast
 from transformers import AutoModelForCausalLM, AutoModel
+from models.model_wrapper import ModelWrapper
 try:
     import flash_attn
     HAS_FLASH_ATTN = True
@@ -55,12 +56,15 @@ def compute_metrics(pred):
     return {"accuracy": acc}
 
 # %% 
+def is_debugger():
+    return sys.gettrace() is not None
 
 def train():
     pass
     # %%
     args = tr.HfArgumentParser((ModelArguments, DataArguments, TrainingArguments))
-    model_args, data_args, training_args = args.parse_args_into_dataclasses(make_default_args(is_notebook())) #replace with isnotebook(), if not debugging    model_args.device_map = "cuda:0" if training_args.deepspeed is None else None
+    use_default_args = is_notebook() or is_debugger() 
+    model_args, data_args, training_args = args.parse_args_into_dataclasses(make_default_args(use_default_args)) #replace with isnotebook(), if not debugging    model_args.device_map = "cuda:0" if training_args.deepspeed is None else None
     model_args.device_map = "cuda:0" if training_args.deepspeed is None else None
 
 
@@ -110,11 +114,13 @@ def train():
     ).run
     len_dataloader_train = len(trainer.get_train_dataloader())
     sys_id = int(re.search(r"LLM-(\d+)", run.get_attribute("sys/id").fetch()).group(1))
+
     log_run(
         run,
         model,
-        model_args.model_name,
         training_args,
+        model_args,
+        data_args,
         len_dataloader_train,
         HAS_FLASH_ATTN,
         dataset_full["train"],

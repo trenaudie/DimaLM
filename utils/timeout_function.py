@@ -5,12 +5,8 @@ from time import time
 from pathlib import Path
 
 ROOT_DIR = next(
-    filter(
-        lambda p: p.name.endswith("LLM_project2"),
-        Path.cwd().iterdir().__next__().parents,
-    )
+    filter(lambda s: "LLM" in s.name, Path.cwd().iterdir().__next__().parents), None
 )
-
 import sys
 
 sys.path.append(str(ROOT_DIR))

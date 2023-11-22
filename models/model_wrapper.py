@@ -1,14 +1,19 @@
 from transformers import AutoModel, AutoModelForCausalLM, TrainingArguments, AutoConfig
-from ..train.arg_classes import ModelArguments
 import torch 
 from typing import Optional, Union, Tuple, List
 from transformers.modeling_outputs import SequenceClassifierOutputWithPast
+try: 
+    import flash_attn
+    HAS_FLASH_ATTN = True
+except ImportError:
+    HAS_FLASH_ATTN = False
+
 
 
 
 class ModelWrapper(torch.nn.Module):
     # this model wrapper implements a cls head on top of a CausalLM or simple transformer Model
-    def __init__(self, model_args:ModelArguments, training_args:TrainingArguments):
+    def __init__(self, model_args, training_args:TrainingArguments):
         super().__init__()
         self.model_name = model_args.model_name
         self.lora_dim = model_args.lora_dim
@@ -106,8 +111,7 @@ class ModelWrapper(torch.nn.Module):
                 dtype = torch.float32  # default dtype for the final layer
             logits = self.cls_head(hidden_states.to(dtype) )
 
-    
-
+            # POOLING METHOD
             if question_mask is None:
                 question_mask = torch.arange(logits.size(1), device=logits.device).expand(
                     batch_size, logits.size(1)

@@ -8,15 +8,16 @@ from itertools import chain
 from typing import Optional
 
 ROOT_DIR = next(
-    filter(lambda s: "LLM" in s.name, chain(Path(os.getcwd()).parents, [Path.cwd()]))
+    filter(lambda s: "LLM" in s.name, Path.cwd().iterdir().__next__().parents), None
 )
 print(ROOT_DIR)
 import configparser
 import matplotlib.pyplot as plt
 
-config = configparser.ConfigParser()
-config.read(ROOT_DIR / "config.ini")
-DATA_FOLDER = Path(config.get("paths", "path_data"))
+from dotenv import load_dotenv
+load_dotenv(ROOT_DIR / "conf.env")
+DATA_FOLDER = os.environ["PATH_DATA"]
+
 print(DATA_FOLDER)
 assert os.path.isdir(DATA_FOLDER)
 assert os.path.isdir(ROOT_DIR)
@@ -28,11 +29,10 @@ sys.path.append(str(ROOT_DIR))
 pd.set_option("display.max_colwidth", None)
 import openai, random
 from fake_openai import OpenAIFake
-import grequests, json
+import json
 
 from utils.timeout_function import TimeoutWrapper
 
-os.environ["OPENAI_API_KEY"] = config.get("openai", "api_key")
 
 
 # %%
@@ -228,6 +228,8 @@ def main_v3(
     prompts_all, generated_for_index_all = build_all_prompts(
         subdf, limit=number_per_cluster
     )
+    if use_fake: 
+        print(prompts_all[0])
     contents = get_api_responses_v1_timeout(
         prompts_all, use_fake=use_fake, timeout=3 if use_fake else 12
     )

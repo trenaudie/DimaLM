@@ -77,12 +77,11 @@ class TrainingArguments(tr.TrainingArguments):
 
 
 
-def make_default_args(is_notebook:bool):
+def make_default_args(use_default_args:bool):
     # fetch the default values in default_args.json
-    if is_notebook:
-        default_args_path = ROOT_DIR/"pipeline_confs/test_args.json"
-        print(f"inside arg_classes WATCHOUT test_args.json")
-        assert default_args_path.exists()
+    if use_default_args:
+        default_args_path = ROOT_DIR/"tests/test_args_v2.json"
+        assert default_args_path.exists(), f"Default args file {default_args_path} does not exist"
         with open(default_args_path, "r") as fp:
             default_args_dict = json.load(fp)
         default_args = [(f"--{k}", str(v)) for k, v in default_args_dict.items()]

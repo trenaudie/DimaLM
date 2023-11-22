@@ -57,6 +57,7 @@ class DatasetBis(torch.utils.data.Dataset):
         num_contexts: int = 5,
         debug: bool = True,
         y_cols_context: List[str] = [],
+       use_context:bool = True,
     ):
         """
         This dataset implements a dynamic context, where the context is the past"""
@@ -66,15 +67,20 @@ class DatasetBis(torch.utils.data.Dataset):
         else:
             self.y_cols = [y_col]
         self.debug = debug
-        # reset indexes correctly
+        self.keep_cols = [x_col] + self.y_cols
         if "cluster" in df.index.names:
             df.reset_index(level="cluster", drop=True, inplace=True)
-        df = df.reset_index().set_index(["SYMBOL", "DATE"]).sort_index()
-        df = df.sort_values(by=["cluster", "DATE", "SYMBOL"])
+        if "cluster" in df.columns:
+            self.keep_cols += ["cluster"]
+            self.use_cluster = True
+        else:
+            self.use_cluster = False
+        df = df.reset_index().set_index(["SYMBOL", "DATE"])
+        df = df.sort_values(by=[ "DATE", "SYMBOL"])
         assert self.y_col in df.columns
         self.x_col = x_col
         assert self.x_col in df.columns
-        self.df = df[[x_col] + self.y_cols + ["cluster"]]
+        self.df = df[self.keep_cols]
         self.num_contexts = num_contexts
         self.tokenizer = AutoTokenizer.from_pretrained(
             model_name, trust_remote_code=True
@@ -91,14 +97,17 @@ class DatasetBis(torch.utils.data.Dataset):
         current_row = self.df.iloc[idx]
         date = current_row.name[1]
         maxdatelp = date - pd.Timedelta(days=5)
-        mask1 = self.df.cluster == current_row.cluster
+        if self.use_cluster:
+            mask1 = self.df.cluster == current_row.cluster
+        else :
+            mask1 = True 
         mask2 = self.df.index.get_level_values(1) < maxdatelp
         if any(mask1 & mask2):
             mask = mask1 & mask2
         else:
             mask = mask2
         context = self.df.loc[mask].iloc[-self.num_contexts :][
-            [self.x_col] + self.y_cols + ["cluster"]
+           self.keep_cols
         ]
         context_dict = {}
         for ycol in self.y_cols:
@@ -110,10 +119,6 @@ class DatasetBis(torch.utils.data.Dataset):
         )
         context_dict[self.x_col] = self.df.iloc[idx][self.x_col]
         context_dict[self.y_col] = self.df.iloc[idx][self.y_col]
-        if self.debug:
-            context_dict["DATE"] = self.df.iloc[idx].name[1]
-            context_dict["cluster"] = self.df.iloc[idx]["cluster"]
-            context_dict["SYMBOL"] = self.df.iloc[idx].name[0]
         return context_dict
 
     def build_prompt(self, row_data: dict) -> str:
@@ -266,19 +271,21 @@ def load_dataset_pseudo_label(
     except AssertionError:
         print(f"unique values {newsdf[y_col].unique()}")
         raise AssertionError
-    newsdf = newsdf[[x_col, y_col, "cluster"]]
+    cols_keep = [x_col, y_col]
+    cols_keep += ["cluster"] if "cluster" in newsdf.columns else []
+    newsdf = newsdf[cols_keep]
 
     # train val test split
     train_fraction = 0.6
     val_fraction = 0.2
-    test_fraction = 0.2
     if "cluster" in newsdf.index.names:
         newsdf = newsdf.reset_index(level="cluster", drop=True)
-    newsdf = newsdf.sort_values(by=["DATE", "cluster", "SYMBOL"])
+
+    newsdf = newsdf.sort_values(by=["DATE", "SYMBOL"])
     if debug:
         if newsdf.shape[0] > 3e4:
             symbols = newsdf.index.get_level_values("SYMBOL").unique()
-            symbols_tenth = random.sample(list(symbols), int(len(symbols) * 0.1))
+            symbols_tenth = random.sample(list(symbols), int(len(symbols) * 0.02))
             newsdf = newsdf.loc[newsdf.index.get_level_values("SYMBOL").isin(symbols_tenth)]
     news_df_train = newsdf.iloc[: int(len(newsdf) * train_fraction)]
     max_date_train = news_df_train.index.get_level_values("DATE").max()

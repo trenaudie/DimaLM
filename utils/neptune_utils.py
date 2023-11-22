@@ -36,8 +36,9 @@ def update_neptune_exp_name(run_id: int, exp_name: str):
 def log_run(
     run: neptune.Run,
     model: nn.Module,
-    model_name: str,
-    args,
+    training_args: transformers.TrainingArguments,
+    model_args,
+    data_args,
     len_dataloader_train: int,
     HAS_FLASH_ATTN: bool,
     dataset_train: Optional[torch.utils.data.Dataset] = None,
@@ -45,30 +46,23 @@ def log_run(
 ):
     """
     Logs details to a Neptune run.
-
-    Args:
-        run: Neptune run object
-        model: The model to log
-        model_name: Name of the model architecture
-        args: Argument object
-        HAS_FLASH_ATTN: A boolean indicating if flash attention is available
-
-    Returns:
-        sys_id: ID of the system run in Neptune
     """
 
-
+    print(f"inside log run for sys id {run['sys/id'].fetch()}")
+    model_name = model_args.model_name
     run["setup/model_architecture"] = model_name
 
     # Create the experiment name
-    exp_name_final = args.exp_name + " DEBUG" if args.is_debug else args.exp_name
+    exp_name_final = training_args.exp_name + " DEBUG" if training_args.is_debug else training_args.exp_name
     run["setup/exp_name"] = exp_name_final
 
     # Upload model architecture to Neptune
     run["setup/archi"].upload(neptune.types.File.from_content(repr(model)))
 
     # Log experiment arguments
-    run["setup/args"] = vars(args)
+    run["setup/training_args"] = vars(training_args)
+    run["setup/model_args"] = vars(model_args)  
+    run["setup/data_args"] = vars(data_args)
 
     if dataset_train is not None:
         if hasattr(dataset_train, "prompt_examples"):
@@ -90,7 +84,7 @@ def log_run(
     gpu_count = len(cuda_device_ids)
 
     run["setup/steps_per_epoch"] = len_dataloader_train / (
-        args.gradient_accumulation_steps * gpu_count
+        training_args.gradient_accumulation_steps * gpu_count
     )
     run["setup/filename_headlines"] = filename_headlines
 

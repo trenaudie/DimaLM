@@ -1,4 +1,4 @@
-deepspeed train/pipeline7b.py \
+deepspeed train/pipeline7bnoflash.py \
     --x_col "headline" \
     --exp_name "llama7B gpt_labels new_repo" \
     --y_col "RET_10D_pos" \

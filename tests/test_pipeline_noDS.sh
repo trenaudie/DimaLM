@@ -1,12 +1,12 @@
-deepspeed train/pipeline7b.py \
-    --x_col "headline_no_ent_v2" \
+python train/pipeline7bnoflash.py \
+    --x_col "headline" \
     --exp_name "llama7B gpt_labels new_repo" \
-    --y_col "pseudo_label" \
-    --filename_headlines  "temp_pseudo_labels_v1.3.parquet" \
+    --y_col "RET_10D_pos" \
+    --filename_headlines  "news_headlines_v3.2.parquet" \
     --output_dir "results/model_news_cls_v2" \
     --lora_dim "8" \
     --bf16 \
-    --model_name "meta-llama/Llama-2-7b-hf" \
+    --model_name "TinyLlama/TinyLlama-1.1B-step-50K-105b" \
     --per_device_train_batch_size "4" \
     --per_device_eval_batch_size "4" \
     --pooler_type_logits "last" \
@@ -20,4 +20,4 @@ deepspeed train/pipeline7b.py \
     --save_steps "25" \
     --eval_steps "25" \
     --remove_unused_columns False \
-    --deepspeed deepspeed_confs/ds_config_zero2_v1.json
+    --is_debug \

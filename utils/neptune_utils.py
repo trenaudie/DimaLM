@@ -40,7 +40,6 @@ def log_run(
     model_args,
     data_args,
     len_dataloader_train: int,
-    HAS_FLASH_ATTN: bool,
     dataset_train: Optional[torch.utils.data.Dataset] = None,
     filename_headlines: Optional[str] = None,
 ):

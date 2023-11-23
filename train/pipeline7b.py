@@ -32,7 +32,6 @@ load_dotenv(ROOT_DIR / "conf.env")
 from utils.stats_utils import model_memory_used, count_parameters
 from utils.neptune_utils import log_run
 from utils.io_utils import write_log_to_file
-from models.load_model_v14 import load_model_pretrained
 from utils.pipeline_utils import is_notebook, set_handlers
 from data_modules import DataCollatorCustom, load_dataset_pseudo_label
 from arg_classes import ModelArguments, DataArguments, TrainingArguments, make_default_args
@@ -85,6 +84,7 @@ def train():
         num_labels=model_args.num_labels,
         debug=training_args.is_debug,
         y_cols_context=[data_args.y_col],
+        add_context=data_args.add_context,
     )
 
 

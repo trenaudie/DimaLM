@@ -58,6 +58,10 @@ class DataArguments:
         default=5,
         metadata={"help": "Number of past headlines to use as context."},
     )
+    add_context : bool = field(
+        default=False,
+        metadata={"help": "Whether to add context to the input prompt (ie past headlines and target)."},
+    )
 
 
 @dataclass

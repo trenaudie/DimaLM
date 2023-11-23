@@ -57,7 +57,7 @@ class DatasetBis(torch.utils.data.Dataset):
         num_contexts: int = 5,
         debug: bool = True,
         y_cols_context: List[str] = [],
-       use_context:bool = True,
+        add_context:bool = True,
     ):
         """
         This dataset implements a dynamic context, where the context is the past"""
@@ -66,6 +66,7 @@ class DatasetBis(torch.utils.data.Dataset):
             self.y_cols = y_cols_context
         else:
             self.y_cols = [y_col]
+        self.add_context = add_context
         self.debug = debug
         self.keep_cols = [x_col] + self.y_cols
         if "cluster" in df.index.names:
@@ -96,19 +97,22 @@ class DatasetBis(torch.utils.data.Dataset):
     def getrow(self, idx):
         current_row = self.df.iloc[idx]
         date = current_row.name[1]
-        maxdatelp = date - pd.Timedelta(days=5)
-        if self.use_cluster:
-            mask1 = self.df.cluster == current_row.cluster
-        else :
-            mask1 = True 
-        mask2 = self.df.index.get_level_values(1) < maxdatelp
-        if any(mask1 & mask2):
-            mask = mask1 & mask2
+        if self.add_context:
+            maxdatelp = date - pd.Timedelta(days=5)
+            if self.use_cluster:
+                mask1 = self.df.cluster == current_row.cluster
+            else :
+                mask1 = True 
+            mask2 = self.df.index.get_level_values(1) < maxdatelp
+            if any(mask1 & mask2):
+                mask = mask1 & mask2
+            else:
+                mask = mask2
+            context = self.df.loc[mask].iloc[-self.num_contexts :][
+            self.keep_cols
+            ]
         else:
-            mask = mask2
-        context = self.df.loc[mask].iloc[-self.num_contexts :][
-           self.keep_cols
-        ]
+            context = pd.DataFrame(columns=self.keep_cols)
         context_dict = {}
         for ycol in self.y_cols:
             context_dict[f"past_{ycol}"] = (
@@ -253,6 +257,7 @@ def load_dataset_pseudo_label(
     num_contexts: int,
     num_labels: int,
     debug: bool = False,
+    add_context:bool = True,
     y_cols_context: List[str] = [],
 ):
     print(f"reading from path {filename_headlines}")
@@ -320,6 +325,7 @@ def load_dataset_pseudo_label(
         x_col=x_col,
         debug=debug,
         y_cols_context=y_cols_context,
+        add_context=  add_context
     )
     dataset_val = DatasetBis(
         news_df_val,
@@ -329,6 +335,7 @@ def load_dataset_pseudo_label(
         x_col=x_col,
         debug=debug,
         y_cols_context=y_cols_context,
+        add_context=  add_context
     )
     dataset_test = DatasetBis(
         news_df_test,
@@ -338,6 +345,7 @@ def load_dataset_pseudo_label(
         x_col=x_col,
         debug=debug,
         y_cols_context=y_cols_context,
+        add_context=  add_context
     )
 
     dataset_full = DatasetDict(

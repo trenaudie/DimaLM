@@ -29,7 +29,7 @@ class ModelArguments:
     def __post_init__(self):
         model_specific_args_fixed = dict(json.load(open(ROOT_DIR/"models/model_confs.json", "r")))[self.model_name]
         for k,v in model_specific_args_fixed.items():
-            print(f"setting {k} to {v}")
+            print(f"inside ModelArguments: setting {k} to {v}")
             setattr(self, k, v)
         if hasattr(self,"use_lora"):
             if not self.use_lora: 

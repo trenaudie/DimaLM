@@ -217,7 +217,7 @@ def get_api_responses_v1_timeout(
 
 # %%
 def main_v3(
-    df: pd.DataFrame, cluster: int, use_fake: bool, number_per_cluster: int = 3
+    df: pd.DataFrame, cluster: int, use_fake: bool, num_prompts_per_cluster: int = 3
 ):
     print(f"running pseudo labelling for cluster {cluster}, with use_fake {use_fake}")
     # only add labelling to one cluster
@@ -226,7 +226,7 @@ def main_v3(
         return df
     subdf = df[df.cluster == cluster]
     prompts_all, generated_for_index_all = build_all_prompts(
-        subdf, limit=number_per_cluster
+        subdf, limit=num_prompts_per_cluster
     )
     if use_fake: 
         print(prompts_all[0])
@@ -244,7 +244,7 @@ def main_v3(
 # %%
 
 
-def pipeline_for_cluster(use_fake: bool = False, number_per_cluster: int = 3):
+def pipeline_for_cluster(use_fake: bool = False, num_prompts_per_cluster: int = 3):
     # if you want to start over, use 1.1.parquet, otherwise use 1.2.parquet
     dfmanual = pd.read_parquet(
         ROOT_DIR / "data_preprocess/data_v6/temp_pseudo_labels_v1.3.parquet"
@@ -274,8 +274,7 @@ def pipeline_for_cluster(use_fake: bool = False, number_per_cluster: int = 3):
         )
         # apply the psuedo labelling
         dfmanual = main_v3(
-            dfmanual, cluster, use_fake, number_per_cluster=number_per_cluster
-        )
+            dfmanual, cluster, use_fake, num_prompts_per_cluster=num_prompts_per_cluster        )
         print(
             f"number of labels total after inserting {dfmanual.loc[dfmanual.pseudo_label.notna(), :].shape[0]}"
         )
@@ -287,6 +286,20 @@ def pipeline_for_cluster(use_fake: bool = False, number_per_cluster: int = 3):
         print(
             f"saving to {ROOT_DIR / 'data_preprocess/data_v6/temp_pseudo_labels_v1.3.parquet'}"
         )
+        df_local = pd.read_parquet(
+            Path(os.environ["PATH_DATA"]) / "temp_pseudo_labels_v1.3.parquet"
+        )
+        not_na_local = df_local.loc[df_local.pseudo_label.notna(), :].shape[0]
+        notna_manual = dfmanual.loc[dfmanual.pseudo_label.notna(), :].shape[0]
+        if notna_manual>not_na_local:
+            print(f"notna_manual {notna_manual} > not_na_local {not_na_local}")
+            dfmanual.to_parquet(
+                Path(os.environ["PATH_DATA"]) / "temp_pseudo_labels_v1.3.parquet"
+            )
+            print(
+                f"saving to {Path(os.environ['PATH_DATA']) / 'temp_pseudo_labels_v1.3.parquet'}"
+            )
+
     else:
         dfmanual.to_parquet(
             ROOT_DIR / "data_preprocess/data_v6/temp_pseudo_labels_v1.2_fake.parquet"
@@ -299,33 +312,10 @@ def pipeline_for_cluster(use_fake: bool = False, number_per_cluster: int = 3):
     )
 
 
-def printResult(cluster: Optional[int] = None, start_idx: int = 0):
-    dfmanual = pd.read_parquet(
-        ROOT_DIR / "data_preprocess/data_v6/temp_pseudo_labels_v1.3.parquet"
-    )
-    print(f"size in GB {dfmanual.memory_usage(deep=True).sum() / 1024 ** 3: 0.2f}")
-    if cluster is not None:
-        print(
-            f"shape (cluster {cluster}) {dfmanual.loc[dfmanual.pseudo_label.notna() & (dfmanual.cluster == cluster), :].shape}"
-        )
-    else:
-        print(
-            f"shape (all clusters) {dfmanual.loc[dfmanual.pseudo_label.notna(), :].shape}"
-        )
-        # size
-
-        df_to_print = dfmanual.loc[dfmanual.cluster == cluster, :]
-        term_width = 100
-        for i in range(start_idx, start_idx + 10):
-            headline = str(df_to_print.iloc[i].headline_no_ent_v2)
-            len_head = len(headline)
-            dashes = "-" * (term_width - len_head - 10)
-            print(f"{headline} {dashes} {df_to_print.iloc[i].pseudo_label}")
 
 
 if __name__ == "__main__":
     from fire import Fire
-    Fire()
-
+    Fire(pipeline_for_cluster)
 
 # %%

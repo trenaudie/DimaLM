@@ -16,3 +16,4 @@ neptune
 datasets
 evaluate
 deepspeed
+openai

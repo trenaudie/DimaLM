@@ -265,7 +265,7 @@ def load_dataset_pseudo_label(
         assert num_labels == newsdf[y_col].nunique()
     except AssertionError:
         print(f"unique values {newsdf[y_col].unique()}")
-        raise AssertionError
+        raise AssertionError(f"num_labels given as argument to the Trainer {num_labels} != {newsdf[y_col].nunique()} real number of num labels")
     cols_keep = [x_col, y_col]
     cols_keep += ["cluster"] if "cluster" in newsdf.columns else []
     newsdf = newsdf[cols_keep]

@@ -28,6 +28,7 @@ sys.path.append(str(ROOT_DIR))
 from dotenv import load_dotenv
 load_dotenv(ROOT_DIR / "conf.env")
 
+
 from utils.stats_utils import model_memory_used, count_parameters
 from utils.neptune_utils import log_run
 from utils.io_utils import write_log_to_file
@@ -38,15 +39,10 @@ from arg_classes import ModelArguments, DataArguments, TrainingArguments, make_d
 from transformers.modeling_outputs import SequenceClassifierOutputWithPast
 from transformers import AutoModelForCausalLM, AutoModel
 from models.model_wrapper import ModelWrapper
-try:
-    import flash_attn
-    HAS_FLASH_ATTN = True
-except ImportError:
-    HAS_FLASH_ATTN = False
 from dataclasses import dataclass, field
 from typing import Optional, Union, Tuple, List
 logger = logging.getLogger(__name__)
-
+torch.set_num_threads(1)
 
 
 def compute_metrics(pred):
@@ -105,12 +101,8 @@ def train():
         eval_dataset=dataset_full["validation"],
         data_collator=collator_fn,
         compute_metrics=compute_metrics,
+        # tokenizer=dataset_full["train"].tokenizer,
     )
-
-
-    # %%
-    trainer.callback_handler.callbacks
-    trainer.remove_callback(tr.integrations.integration_utils.NeptuneCallback)
 
     # %%
     neptune_cb = None 
@@ -118,8 +110,6 @@ def train():
         if isinstance(cb, NeptuneCallback):
             neptune_cb = cb
             break
-    print(f"neptune cb {neptune_cb}")
-    # %%
     if neptune_cb is not None:
         run = next(
             filter(lambda x: isinstance(x, NeptuneCallback), trainer.callback_handler.callbacks)
@@ -138,7 +128,6 @@ def train():
         model_args,
         data_args,
         len_dataloader_train,
-        HAS_FLASH_ATTN,
         dataset_full["train"],
         filename_headlines=data_args.filename_headlines,
     )
@@ -166,24 +155,29 @@ def train():
         dataset_full["train"], batch_size=2, shuffle=True, collate_fn=collator_fn
     )
     batch = next(itertools.islice(iter(dataloader), 1000, 1001))
-    for i, batch in enumerate(dataloader):
-        question_mask = batch["question_mask"]
-        for j in range(question_mask.shape[0]):
-            assert any(
-                question_mask[j] == 1
-            ), f"question mask {question_mask[j]} does not contain any 1"
+    question_mask = batch["question_mask"]
+    for j in range(question_mask.shape[0]):
+        assert any(
+            question_mask[j] == 1
+        ), f"question mask {question_mask[j]} does not contain any 1"
+   
 
     # %%
 
     trainer.args.remove_unused_columns = False
     dataloader2 = trainer.get_train_dataloader()
     batch = next(itertools.islice(iter(dataloader2), 10, 11))
-    print(f"batch keys {batch.keys()}")
 
     dataloader3 = trainer.get_eval_dataloader()
     batch = next(itertools.islice(iter(dataloader3), 10, 11))
-    print(f"batch keys {batch.keys()}")
-
+    from tqdm import tqdm
+    print(f"checking the validation dataloader")
+    for i, batch in tqdm(enumerate(dataloader3)):
+        question_mask = batch["question_mask"]
+        for j in range(question_mask.shape[0]):
+            assert any(
+                question_mask[j] == 1
+            ), f"question mask {question_mask[j]} does not contain any 1"
     # %%
     trainer.train()
 

@@ -165,6 +165,7 @@ class DatasetBis(torch.utils.data.Dataset):
         Return: "
         """
         mapping_return_to_direction = {0: "DOWN", 1: "UP", 2: "NOT RELEVANT"}
+        # prompt = open("myprompt.txt","r").read()
         prompt = "Given the prediction labels 'up' and 'down', read the given list of pairs of news headlines and past returns for the company and predict the return for the current news. Answer in the forwat UP or DOWN\n"
         for past_idx in range(len(row_data[f"past_{self.x_col}"])):
             past_news = row_data[f"past_{self.x_col}"][past_idx]  #
@@ -222,15 +223,7 @@ class DatasetBis(torch.utils.data.Dataset):
         return data_dict
 
     def __getitem__(self, idx):
-        if isinstance(idx, tuple):
-            # add prompt
-            if idx[1]:
-                ret = self.__getitem__(idx[0])
-                ret["prompt"] = self.prompts[idx[0]]
-                return ret
-            else:
-                # dont add prompt
-                idx = idx[0]
+        ret = None
         if isinstance(idx, int):
             ret = {
                 "input_ids": self.input_ids[idx][0],
@@ -243,6 +236,8 @@ class DatasetBis(torch.utils.data.Dataset):
                 "labels": list(map(lambda x: self.labels[x], idx)),
                 "question_mask": list(map(lambda x: self.question_mask[x], idx)),
             }
+            if ret is None: 
+                raise NotImplementedError
         return ret
 
     def __len__(self):

@@ -105,19 +105,12 @@ def train():
         # tokenizer=dataset_full["train"].tokenizer,
     )
 
-
-    # %%
-    trainer.callback_handler.callbacks
-    trainer.remove_callback(tr.integrations.integration_utils.NeptuneCallback)
-
     # %%
     neptune_cb = None 
     for cb in trainer.callback_handler.callbacks:
         if isinstance(cb, NeptuneCallback):
             neptune_cb = cb
             break
-    print(f"neptune cb {neptune_cb}")
-    # %%
     if neptune_cb is not None:
         run = next(
             filter(lambda x: isinstance(x, NeptuneCallback), trainer.callback_handler.callbacks)

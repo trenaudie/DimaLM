@@ -72,6 +72,7 @@ class TrainingArguments(tr.TrainingArguments):
     )
     is_debug: bool = field(default=False)
     exp_name: str = field(default="llama7b_v14")
+    ddp_find_unused_parameters: bool = field(default=False)
 
 
 

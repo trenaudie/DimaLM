@@ -48,6 +48,7 @@ from typing import Optional, Union, Tuple, List
 logger = logging.getLogger(__name__)
 
 
+
 def compute_metrics(pred):
     # accuracy
     labels = pred.label_ids
@@ -110,16 +111,29 @@ def train():
     )
 
 
-
-
+    # %%
+    trainer.callback_handler.callbacks
+    trainer.remove_callback(tr.integrations.integration_utils.NeptuneCallback)
 
     # %%
-    run = next(
-        filter(lambda x: isinstance(x, NeptuneCallback), trainer.callback_handler.callbacks)
-    ).run
+    neptune_cb = None 
+    for cb in trainer.callback_handler.callbacks:
+        if isinstance(cb, NeptuneCallback):
+            neptune_cb = cb
+            break
+    print(f"neptune cb {neptune_cb}")
+    # %%
+    if neptune_cb is not None:
+        run = next(
+            filter(lambda x: isinstance(x, NeptuneCallback), trainer.callback_handler.callbacks)
+        ).run
+    else:
+        run = neptune.init_run(
+            api_token=os.environ["NEPTUNE_API_TOKEN"],
+            project=os.environ["NEPTUNE_PROJECT"],
+        )
     len_dataloader_train = len(trainer.get_train_dataloader())
     sys_id = int(re.search(r"LLM-(\d+)", run.get_attribute("sys/id").fetch()).group(1))
-
     log_run(
         run,
         model,
@@ -131,7 +145,6 @@ def train():
         dataset_full["train"],
         filename_headlines=data_args.filename_headlines,
     )
-
     os.makedirs(training_args.output_dir, exist_ok=True)
     logger = logging.getLogger("root")
     logger = set_handlers(logger, sys_id, ROOT_DIR)  # creates a file handler.

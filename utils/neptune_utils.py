@@ -60,9 +60,15 @@ def log_run(
     run["setup/archi"].upload(neptune.types.File.from_content(repr(model)))
 
     # Log experiment arguments
-    run["setup/training_args"] = vars(training_args)
-    run["setup/model_args"] = vars(model_args)  
-    run["setup/data_args"] = vars(data_args)
+    training_args_dict = vars(training_args)
+    training_args_dict = {k: str(v) for k, v in training_args_dict.items()}
+    model_args_dict = vars(model_args)
+    model_args_dict = {k: str(v) for k, v in model_args_dict.items()}
+    data_args_dict = vars(data_args)
+    data_args_dict = {k: str(v) for k, v in data_args_dict.items()}
+    run["setup/training_args"] = training_args_dict
+    run["setup/model_args"] = model_args_dict
+    run["setup/data_args"] = data_args_dict
 
     if dataset_train is not None:
         if hasattr(dataset_train, "prompt_examples"):
@@ -76,7 +82,7 @@ def log_run(
     CMDLINE = us.cmdline()
     print(f"CMDLINE {CMDLINE}")
     assert len(CMDLINE) > 0, "CMDLINE empty"
-    run["setup/command_line"] = CMDLINE
+    run["setup/command_line"] = str(CMDLINE)
 
     # Compute and log other details
     num_cuda_devices = torch.cuda.device_count()

@@ -1,3 +1,9 @@
+"""
+This scripts aims to perform gpt labellign on a preprocessed Street Account df. 
+Some of the pseudo_label values must ALREADY be in the dataframe to provide context to the gpt model in the prompt.
+"""
+
+
 # %%
 import asyncio
 import os

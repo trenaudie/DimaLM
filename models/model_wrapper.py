@@ -19,7 +19,8 @@ class ModelWrapper(torch.nn.Module):
         self.device_map = model_args.device_map
         self.mlp_dropout = model_args.mlp_dropout
         self.torch_dtype = torch.bfloat16 if training_args.bf16 else torch.float16
-        flashattn_supported = model_args.use_flash_attention_2
+        flashattn_supported = False 
+        print(f"setting flash attention to False, actually")
         ModelClassAuto = AutoModelForCausalLM if self.use_causal else AutoModel 
         self.model = ModelClassAuto.from_pretrained(self.model_name, use_flash_attention_2 =flashattn_supported, torch_dtype = self.torch_dtype, trust_remote_code= True, device_map = self.device_map)
         self.final_dim = self.model.config.hidden_size if not self.use_causal else self.model.config.vocab_size
@@ -45,6 +46,7 @@ class ModelWrapper(torch.nn.Module):
                 target_modules=model_args.target_modules,
             )
             self.model = get_peft_model(self.model, peft_config=peft_config)
+        self.config = self.model.config
 
     def forward(
         self,
@@ -136,3 +138,5 @@ class ModelWrapper(torch.nn.Module):
                 loss=loss,
                 logits=pooled_logits,
             )
+
+

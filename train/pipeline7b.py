@@ -2,7 +2,6 @@
 
 ### this pipelin uses pseudo labels instead of RET as a target.
 ### Why new pipeline ? because the amount of pseudo labels is so low that train val test split does not work
-## why use a simple 0.6/0.4 train-val in this pipeline
 
 # %%
 import gc
@@ -26,7 +25,7 @@ ROOT_DIR = next(filter(
 print(f"ROOT_DIR {ROOT_DIR}")
 sys.path.append(str(ROOT_DIR))
 from dotenv import load_dotenv
-load_dotenv(ROOT_DIR / "conf.env")
+load_dotenv(ROOT_DIR / "config.env")
 
 
 from utils.stats_utils import model_memory_used, count_parameters
@@ -40,8 +39,9 @@ from transformers import AutoModelForCausalLM, AutoModel
 from models.model_wrapper import ModelWrapper
 from dataclasses import dataclass, field
 from typing import Optional, Union, Tuple, List
+import huggingface_hub
 logger = logging.getLogger(__name__)
-torch.set_num_threads(1)
+# torch.set_num_threads(1) # this is important for memory management, if using deepspeed
 
 
 def compute_metrics(pred):
@@ -70,7 +70,6 @@ def train():
 
 
     # %% 
-    model_args.use_causal = False 
     model = ModelWrapper(model_args, training_args)
 
     # %%
@@ -90,9 +89,15 @@ def train():
 
 
     # %% 
+    if training_args.push_to_hub:
+        output_dir = training_args.output_dir
+        output_dir_name = Path(output_dir).name
+        try : 
+            training_args.set_push_to_hub(model_id = f"tanguyrenaudie/{output_dir_name}")
+        except huggingface_hub.utils._errors.RepositoryNotFoundError:
+            print(f"repo not found, saving locally only")
+            training_args.push_to_hub = False
     collator_fn = DataCollatorCustom(tokenizer=dataset_full["train"].tokenizer)
-    assert training_args.evaluation_strategy == "steps"
-    assert training_args.eval_steps >= 1 and training_args.eval_steps <= 100
     assert len(dataset_full["validation"])>1e3 or (training_args.is_debug and len(dataset_full["validation"])>10)
     trainer = Trainer(
         model=model,
@@ -140,7 +145,8 @@ def train():
     # only train the classification layer, no lora
     if model_args.lora_dim == 0:
         for name, param in trainer.model.named_parameters():
-            if "score" in name:
+            if "score" in name or "cls_head" in name:
+                # final layer, setting requires_grad = True
                 param.requires_grad = True
             else:
                 param.requires_grad = False
@@ -149,34 +155,7 @@ def train():
     print(f"trainable {trainable}, total {total}, ratio {trainable/total:.3f}")
 
 
-    # %%
-    dataloader = torch.utils.data.DataLoader(
-        dataset_full["train"], batch_size=2, shuffle=True, collate_fn=collator_fn
-    )
-    batch = next(itertools.islice(iter(dataloader), 1000, 1001))
-    question_mask = batch["question_mask"]
-    for j in range(question_mask.shape[0]):
-        assert any(
-            question_mask[j] == 1
-        ), f"question mask {question_mask[j]} does not contain any 1"
-   
-
-    # %%
-
-    trainer.args.remove_unused_columns = False
-    dataloader2 = trainer.get_train_dataloader()
-    batch = next(itertools.islice(iter(dataloader2), 10, 11))
-
-    dataloader3 = trainer.get_eval_dataloader()
-    batch = next(itertools.islice(iter(dataloader3), 10, 11))
-    from tqdm import tqdm
-    print(f"checking the validation dataloader")
-    for i, batch in tqdm(enumerate(dataloader3)):
-        question_mask = batch["question_mask"]
-        for j in range(question_mask.shape[0]):
-            assert any(
-                question_mask[j] == 1
-            ), f"question mask {question_mask[j]} does not contain any 1"
+ 
     # %%
     trainer.train()
 

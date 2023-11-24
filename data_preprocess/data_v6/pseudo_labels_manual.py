@@ -1,3 +1,8 @@
+"""
+This script aims to add some manual labels to a pre-processed Street Account dataset.
+"""
+
+
 # %%
 import os
 import pandas as pd

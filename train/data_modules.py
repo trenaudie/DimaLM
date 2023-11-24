@@ -283,7 +283,7 @@ def load_dataset_pseudo_label(
 
     newsdf = newsdf.sort_values(by=["DATE", "SYMBOL"])
     if debug:
-        if newsdf.shape[0] > 1e5:
+        if newsdf.shape[0] > 5e4:
             symbols = newsdf.index.get_level_values("SYMBOL").unique()
             symbols_tenth = random.sample(list(symbols), int(len(symbols) * 0.01))
             newsdf = newsdf.loc[newsdf.index.get_level_values("SYMBOL").isin(symbols_tenth)]

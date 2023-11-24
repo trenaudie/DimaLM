@@ -108,7 +108,6 @@ def train():
         eval_dataset=dataset_full["validation"],
         data_collator=collator_fn,
         compute_metrics=compute_metrics,
-        # tokenizer=dataset_full["train"].tokenizer,
     )
 
     # %%

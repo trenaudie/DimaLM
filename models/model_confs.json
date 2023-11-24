@@ -10,5 +10,9 @@
     "meta-llama/Llama-2-7b-hf":{
         "lora":true,
         "use_flash_attention_2":true
+    },
+    "meta-llama/Llama-2-13b-hf":{
+        "lora":true,
+        "use_flash_attention_2":true
     }
 }

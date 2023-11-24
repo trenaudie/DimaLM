@@ -118,6 +118,7 @@ class ModelWrapper(torch.nn.Module):
                 logits * question_mask.unsqueeze(2).to(torch.int), dim=1
             )  # -> B,2
             pooled_logits = logits_sum / question_mask.sum(dim=1, keepdim=True)
+  
             # other methods
             # avg pooling. sequence_lengths is the position of the last VALID token
 

@@ -112,7 +112,6 @@ def train():
 
     # %%
     # remove neptune 
-    trainer.callback_handler.pop_callback(NeptuneCallback)
     neptune_cb = None 
     for cb in trainer.callback_handler.callbacks:
         if isinstance(cb, NeptuneCallback):

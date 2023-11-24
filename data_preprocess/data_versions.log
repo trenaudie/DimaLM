@@ -1,0 +1,273 @@
+TSNET dates:
+trval 1999-01-07 --> 2014-08-28
+test 2014-09-02 --> 2019-12-31
+
+
+
+
+df_price.parquet
+- sql query with join for beta col (factor 255)
+[ScreenFactory].[dbo].[03_DailyPx_Temp] px
+left join [ScreenFactory].[dbo].[Securities_Fds]
+- columns renamed well
+- index = SYMBOL, DATE (datetime64[ns])
+- RET_5D, RET_5D_bin, RET_5D_dec
+    - groupby("DATE")['RET_5D'].transform(lambda x:np.floor((x.rank(pct=True)-1e-7) * 2))
+number of symbols unique 38748
+number of dates unique 5739
+number of rows 34731555
+df_price_v1.1.parquet
+same as above but with cols RET_5D_bin, RET_10D_bin
+df_price0.parquet
+raw dataframe after sql query (- created in data_V4_djones.ipynb)
+SELECT  px.fsym_id
+      , px.p_date
+      , px.exch_rate_sec_eur
+      , px.p_price_adj_split_spinoff_div
+      , px.mcap_local
+      ,sec.factset_industry
+      ,sec.factset_sector
+	  ,[04_Factor_Raw_Histo].[factor_value] as beta
+
+  FROM [ScreenFactory].[dbo].[03_DailyPx_Temp] px
+
+  left join [ScreenFactory].[dbo].[Securities_Fds] sec
+  on px.fsym_id = sec.fsym_id
+
+  left join [ScreenFactory].[dbo].[04_Factor_Raw_Histo]
+  on px.fsym_id = [04_Factor_Raw_Histo].fsym_id AND px.p_date = [04_Factor_Raw_Histo].p_date
+df_price_v0.1.parquet (- created in data_V4_djones.ipynb)
+- columns RET_5D RET_10D created using a groupby SYMBOL, then
+- columns RET_5D_pos and RET_10D_pos created
+- no cross sectional (groupby DATE) rank of the returns
+
+news_headlines_v0.parquet
+raw copy of news_200304_202212.pkl
+
+
+
+v1.0
+features:
+- symbol is all_factset_entity_id
+- headlines only
+- filter "street account"
+target:
+- forward 5D return, 10 deciles
+v1.1
+path: news_headlines_v1.1.parquet
+features:
+- symbol is all_factset_entity_id
+- headlines and story_body columns kept
+- filter "street account" in headlines pattern = r'.*Street\s*Account.*'
+- filter "reports...vs" in headlines - pattern = r'.*reports.*vs.*'
+target:
+- forward 5D return, 10 deciles: RET_5D_dec
+- forward 5D return, 2 deciles: RET_5D_bin
+number of dates 2057 and SYMBOLs 10598
+min date 2012-02-06, max date 2019-12-31
+numdates 1329
+v1.2
+path:
+news_headlines_v1.2.parquet
+same as above but DATE column is story_date_time
+number of dates 4347 and SYMBOLs 11043, more dates and symbols because merged with df_price
+min date 2003-04-11 00:00:00 and max date 2019-12-31 00:00:00
+shape (2327169, 11)
+
+
+v1.2
+news_headlines_final_v1.2_not_merged.parquet
+features: (SYMBOL,DATE, headline)
+- symbol is all_factset_entity_id
+- dates shift by 1
+- filter "street account" in headlines pattern = r'.*Street\s*Account.*'
+- filter "reports...vs" in headlines - pattern = r'.*reports.*vs.*'
+NO TARGET
+number of symbols unique 90683
+number of dates unique 3969
+number of rows 35008158
+shape (35008158, 2)
+news_headlines_final_v1.2_not_merged.parquet
+features: (SYMBOL,DATE, headline)
+- dates shift by 1
+- filter "street account" in headlines pattern = r'.*Street\s*Account.*'
+- just this filter
+target:
+- RET_5D_bin
+- RET_10D_bin
+number of symbols unique 11443
+number of dates unique 2057
+number of rows 2601757
+
+
+
+news_headlines_final_v2.1(raw).parquet
+features:
+- symbol is all_factset_entity_id
+- dates shift by 1
+- filter html tags - pattern = r'<.{0,10}>'
+- filter "street account" in headlines pattern = r'.*Street\s*Account.*'
+- filter "reports...vs" in headlines - pattern = r'.*reports.*vs.*'
+- headlines + " " + text  (no summarization)
+target:
+- forward 5D return, 2 deciles
+number of symbols unique 14260
+number of dates unique 2835
+number of rows 2928084
+
+
+
+news_headlines_final_v2_merged.parquet
+features: same as v2.1(raw) but merged with df_price['RET_5D_bin', 'RET_5D_dec', ..descols]
+number of symbols unique 14260
+number of dates unique 2835
+number of rows 2928084
+
+
+
+v3
+news_headlines_v3.parquet
+features:
+- symbol is factset_entity_id
+- dates shift by 1
+- filter:
+    - "Street Account" regex = '.*Street\s*Account.*'
+    - "Barron's Summary"
+    - "...-- Reuters"
+    - "- Bloomberg"
+    - "trading higher"
+    - "Street Takeaway"
+- final filters:
+    - any news with less than 6 words (len(headline.split()) < 6)
+before merges with df_symbols and df_price
+- number of symbols : 26220
+- number of dates : 7152
+- number of headlines : 2381758 ie 2.38M
+after merges with symbols and price
+- number of dates 4333 and SYMBOLs 11100
+- min date 2003-04-11 00:00:00 and max date 2019-12-31 00:00:00
+- shape (1664327, 9)
+after removing duplicates (subset = SYMBOL, DATE, headline, RET_5D_bin, RET_10D_bin)
+- number of dates 4333 and SYMBOLs 11100
+- min date 2003-04-11 00:00:00 and max date 2019-12-31 00:00:00
+- shape (1002870, 7)
+news_headlines_v3.2.parquet
+same as above but added cols: RET_5D_pos (RET_5D > 0 raw return) and RET_10D_pos
+news_headlines_v3.3.parquet
+same as above but using headlines_no_ent instead of headlines
+- shape (834279, 9)
+
+
+
+
+
+DOW JONES (v4)
+- 1998 observations
+- 30 symbols
+
+cf data_v4.2_dj_spacy.ipynb and data_v4_DJ_script.py
+the script creates the 4.1 raw data, while the 4.2 ipynb notebook creates the filtered data
+v4.1 - raw data
+v4.2 - filters and replaces applied:
+pattern0 = r"-{1,3}(\s[A-Z]|$).*"
+pattern1 = r"press release"
+pattern2 = r"market talk\w*:?"
+pattern3 = r"earnings? call.(transcript)?"
+pattern4 = ">\w+\s?$"
+pattern5 = r"-\d+-\s?$"
+djdf["HEADLINE"] = djdf["HEADLINE"].apply(lambda x: re.sub(pattern1, "", x, flags = re.IGNORECASE).strip())
+djdf["HEADLINE"] = djdf["HEADLINE"].apply(lambda x: re.sub(pattern2, "", x, flags = re.IGNORECASE).strip())
+djdf["HEADLINE"] = djdf["HEADLINE"].apply(lambda x: re.sub(pattern3, "", x, flags = re.IGNORECASE).strip())
+djdf["HEADLINE"] = djdf["HEADLINE"].apply(lambda x: re.sub(pattern4, "", x, flags = re.IGNORECASE).strip())
+djdf["HEADLINE"] = djdf["HEADLINE"].apply(lambda x: re.sub(pattern0, "", x, flags = re.IGNORECASE).strip())
+djdf["HEADLINE"] = djdf["HEADLINE"].apply(lambda x: re.sub(pattern5, "", x, flags = re.IGNORECASE).strip())
+v4.3 - adding ~MORE TO FOLLOW filter on the TEXT column
+v4.4 - adding the len>100, & ~MORE T0 FOLLOW & ~Earnings Call Transcripts (TEXT col)-> to try HEADLINE + TEXT or TEXT only
+
+
+
+v4.5 - v4.2 merged with news_headlines_v3.2.parquet
+v4.6 - v4.3 merged with news_headlines_v3.2.parquet
+
+
+
+news_headlines_v5.parquet
+SA news, but resampled to 7D intervals (with an aggregate merge)
+RET_5D_pos and RET_10D_pos from df_price_v0.1.parquet
+cf data_v5_window.ipynb
+shape of final df (51227, 17)
+number of symbols in df 11100
+number of unique dates in df 4333
+min date in df 2003-04-11 00:00:00
+max date in df 2019-12-31 00:00:00
+
+
+
+
+
+
+
+
+data_v5_window.ipynb
+
+temp/data_v5_company_name_done.parquet
+- getthe company name for each headline
+- example Apple Q3 EPS + 5%. company_name=Apple
+- How? Using spacy, chunk_nouns, then collections.Counter to collect the most common noun chunks
+
+temp/data_v5_company_context_ckpt500.parquet
+- load "data_v5_company_name_done.parquet" -> ask the wikipediaapi for info about the company
+- take the first three sentences
+- col = context_company
+
+temp/data_v5_context_news_done.parquet
+- load "data_v5_company_context_ckpt500.parquet"
+- two slider slinding window to collect the three news headlines before the current news headline
+- concatenate the three news headlines into one string
+- col = news_context
+- CURRENTLY DEBUG MODE (only 30 symbols and not context_company)
+
+temp/data_v5_ticker_done.parquet
+- load "data_v5_context_news_done.parquet"
+
+final version: "/mnt/nvme0n1p1/ml_data_tre/news_headlines_v5.0.parquet"
+shape of dfnews_post_wikipedia (1002870, 13)
+number of symbols in df 11100
+min date in df 2003-04-11 00:00:00
+max date in df 2019-12-31 00:00:00
+
+
+news_headlines_v5.1.parquet
+- load v5.0
+- add col return_context : sliding window with the last three 10D rets for that symbol wrt DATE.
+
+
+
+news_headlines_v5.2.parquet
+- cf data_v6/explore_data.py
+- load v5.1
+- add col company_name_list, where all the company names associated with that symbol are added.
+- ex. [Ultra Petroleum , UPL]
+- headline_no_ent_v2 replace any occurent of company_name_list with "company" string
+
+
+temp_df_clusters_v3.parquet
+- headline_no_ent_v2 (where company names list are replaced with "company")
+- cluster the headlines using the MTEB model
+- the clusters are very relevant
+- no past_headlines column based on clustering, yet.
+- legacy news_context, return_context and data_v5_company_context
+
+
+
+
+
+temp_pseudo_labels_v1.3.parquet 
+added clustering + 80K gpt labels
+USE THIS ONE
+- RET_10D_pos
+- RET_5D_pos
+- RET_10D_bin 
+- RET_5D_bin
+- pseudo_label
+

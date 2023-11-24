@@ -245,12 +245,12 @@ def main_v3(
 
 
 def pipeline_for_cluster(use_fake: bool = False, num_prompts_per_cluster: int = 3):
-    # if you want to start over, use 1.1.parquet, otherwise use 1.2.parquet
-    dfmanual = pd.read_parquet(
-        ROOT_DIR / "data_preprocess/data_v6/temp_pseudo_labels_v1.3.parquet"
-    )
 
     for cluster in range(1, 10):
+        # if you want to start over, use 1.1.parquet, otherwise use 1.2.parquet
+        dfmanual = pd.read_parquet(
+            ROOT_DIR / "data_preprocess/data_v6/temp_pseudo_labels_v1.3.parquet"
+        )
         # add cluster column
         if "cluster" in dfmanual.index.names:
             dfmanual = dfmanual.reorder_levels(
@@ -279,34 +279,34 @@ def pipeline_for_cluster(use_fake: bool = False, num_prompts_per_cluster: int = 
             f"number of labels total after inserting {dfmanual.loc[dfmanual.pseudo_label.notna(), :].shape[0]}"
         )
 
-    if use_fake == False:
-        dfmanual.to_parquet(
-            ROOT_DIR / "data_preprocess/data_v6/temp_pseudo_labels_v1.3.parquet"
-        )
-        print(
-            f"saving to {ROOT_DIR / 'data_preprocess/data_v6/temp_pseudo_labels_v1.3.parquet'}"
-        )
-        df_local = pd.read_parquet(
-            Path(os.environ["PATH_DATA"]) / "temp_pseudo_labels_v1.3.parquet"
-        )
-        not_na_local = df_local.loc[df_local.pseudo_label.notna(), :].shape[0]
-        notna_manual = dfmanual.loc[dfmanual.pseudo_label.notna(), :].shape[0]
-        if notna_manual>not_na_local:
-            print(f"notna_manual {notna_manual} > not_na_local {not_na_local}")
+        if use_fake == False:
             dfmanual.to_parquet(
-                Path(os.environ["PATH_DATA"]) / "temp_pseudo_labels_v1.3.parquet"
+                ROOT_DIR / "data_preprocess/data_v6/temp_pseudo_labels_v1.3.parquet"
             )
             print(
-                f"saving to {Path(os.environ['PATH_DATA']) / 'temp_pseudo_labels_v1.3.parquet'}"
+                f"saving to {ROOT_DIR / 'data_preprocess/data_v6/temp_pseudo_labels_v1.3.parquet'}"
             )
+            df_local = pd.read_parquet(
+                Path(os.environ["PATH_DATA"]) / "temp_pseudo_labels_v1.3.parquet"
+            )
+            not_na_local = df_local.loc[df_local.pseudo_label.notna(), :].shape[0]
+            notna_manual = dfmanual.loc[dfmanual.pseudo_label.notna(), :].shape[0]
+            if notna_manual>not_na_local:
+                print(f"notna_manual {notna_manual} > not_na_local {not_na_local}")
+                dfmanual.to_parquet(
+                    Path(os.environ["PATH_DATA"]) / "temp_pseudo_labels_v1.3.parquet"
+                )
+                print(
+                    f"saving to {Path(os.environ['PATH_DATA']) / 'temp_pseudo_labels_v1.3.parquet'}"
+                )
 
-    else:
-        dfmanual.to_parquet(
-            ROOT_DIR / "data_preprocess/data_v6/temp_pseudo_labels_v1.2_fake.parquet"
-        )
-        print(
-            f"saving to {ROOT_DIR / 'data_preprocess/data_v6/temp_pseudo_labels_v1.2_fake.parquet'}"
-        )
+        else:
+            dfmanual.to_parquet(
+                ROOT_DIR / "data_preprocess/data_v6/temp_pseudo_labels_v1.2_fake.parquet"
+            )
+            print(
+                f"saving to {ROOT_DIR / 'data_preprocess/data_v6/temp_pseudo_labels_v1.2_fake.parquet'}"
+            )
     print(
         f"number of labels for this cluster after inserting {dfmanual.loc[dfmanual.pseudo_label.notna(), :].shape[0]}"
     )

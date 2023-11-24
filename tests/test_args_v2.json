@@ -1,9 +1,9 @@
 {
     "model_name": "TinyLlama/TinyLlama-1.1B-step-50K-105b",
-    "lora_dim": 16,
+    "lora_dim": 8,
     "lora_dropout": 0.3,
     "mlp_dropout": 0.3,
-    "filename_headlines": "news_headlines_v3.2.parquet",
+    "filename_headlines":  "temp_pseudo_labels_v1.3.parquet" ,
     "x_col": "headline",
     "y_col": "RET_10D_pos",
     "num_contexts": 5,
@@ -16,10 +16,12 @@
     "eval_steps": 5,
     "logging_steps": 25,
     "save_steps": 25,
-    "output_dir": "/mnt/nvme0n1p1/LLM_project3/results/model_news_cls_v2",
+    "output_dir": "results/Llama_SFT",
     "is_debug": true,
     "bf16": true,
     "num_labels": 2,
     "remove_unused_columns": false,
     "evaluation_strategy": "steps", 
-    "save_total_limit": 1}
+    "save_total_limit": 1,
+"push_to_hub": true,
+"deepspeed":"deepspeed_confs/ds_config_zero2_v1.json"}

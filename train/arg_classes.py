@@ -19,7 +19,6 @@ class ModelArguments:
     lora_dim: int = field(default=16)
     lora_dropout: float = field(default=0.3)
     mlp_dropout: float = field(default=0.3)
-    pooler_type_logits: str = field(default="avg")
     use_mlp: bool = field(default=True)
     target_modules: list[str] = field(
         default_factory=lambda: ["q_proj", "k_proj", "v_proj", "query", "key", "value"]
@@ -43,11 +42,11 @@ class ModelArguments:
 @dataclass
 class DataArguments:
     filename_headlines: str = field(
-        default="news_headlines_v5.2.parquet",
+        default="news_headlines_v3.2.parquet",
         metadata={"help": "Path to the training data."},
     )
     x_col: str = field(
-        default="headline_no_ent",
+        default="headline",
         metadata={"help": "Name of the column containing the news headlines."},
     )
     y_col: str = field(
@@ -59,7 +58,7 @@ class DataArguments:
         metadata={"help": "Number of past headlines to use as context."},
     )
     add_context : bool = field(
-        default=False,
+        default=True,
         metadata={"help": "Whether to add context to the input prompt (ie past headlines and target)."},
     )
 
@@ -77,6 +76,7 @@ class TrainingArguments(tr.TrainingArguments):
     is_debug: bool = field(default=False)
     exp_name: str = field(default="llama7b_v14")
     ddp_find_unused_parameters: bool = field(default=False)
+    remove_unused_columns: bool = field(default=False)
 
 
 
@@ -89,8 +89,10 @@ def make_default_args(use_default_args:bool):
         assert default_args_path.exists(), f"Default args file {default_args_path} does not exist"
         with open(default_args_path, "r") as fp:
             default_args_dict = json.load(fp)
+        print(f"using default args in {default_args_path}")
         default_args = [(f"--{k}", str(v)) for k, v in default_args_dict.items()]
         default_args = list(itertools.chain(*default_args))
         return default_args 
     else:
+        print(f"parsing args from command line")
         return None

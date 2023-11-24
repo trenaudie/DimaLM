@@ -1,4 +1,5 @@
 python -m torch.distributed.run  train/pipeline7b.py \
+    --nproc_per_node=1 --nnode=1 --node_rank=0 \
     --x_col "headline_no_ent_v2" \
     --exp_name "llama7B gpt_labels new_repo" \
     --y_col "pseudo_label" \

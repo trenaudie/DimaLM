@@ -1,4 +1,6 @@
-python -m torch.distributed.run train/pipeline7b.py \
+torchrun \
+    --standalone --nnodes=1 --nproc-per-node=2\
+    train/pipeline7b.py \
     --x_col "headline_no_ent_v2" \
     --exp_name "llama7b gpt_labels" \
     --y_col "pseudo_label" \

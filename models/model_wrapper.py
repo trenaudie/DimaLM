@@ -19,10 +19,8 @@ class ModelWrapper(torch.nn.Module):
         self.device_map = model_args.device_map
         self.mlp_dropout = model_args.mlp_dropout
         self.torch_dtype = torch.bfloat16 if training_args.bf16 else torch.float16
-        flashattn_supported = False 
-        print(f"setting flash attention to False, actually")
         ModelClassAuto = AutoModelForCausalLM if self.use_causal else AutoModel 
-        self.model = ModelClassAuto.from_pretrained(self.model_name, use_flash_attention_2 =flashattn_supported, torch_dtype = self.torch_dtype, trust_remote_code= True, device_map = self.device_map)
+        self.model = ModelClassAuto.from_pretrained(self.model_name, use_flash_attention_2 =model_args.use_flash_attention_2, torch_dtype = self.torch_dtype, trust_remote_code= True, device_map = self.device_map)
         self.final_dim = self.model.config.hidden_size if not self.use_causal else self.model.config.vocab_size
         if self.use_mlp:
             self.cls_head = torch.nn.Sequential(

@@ -9,7 +9,6 @@ deepspeed  train/pipeline7b.py \
     --model_name "mistralai/Mistral-7B-v0.1" \
     --per_device_train_batch_size "4" \
     --per_device_eval_batch_size "4" \
-    --pooler_type_logits "last" \
     --save_total_limit "1" \
     --learning_rate "0.00001" \
     --weight_decay "0.005" \

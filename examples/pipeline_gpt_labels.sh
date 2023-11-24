@@ -1,4 +1,4 @@
-python train/pipeline7b.py \
+python -m torch.distributed.run train/pipeline7b.py \
     --x_col "headline_no_ent_v2" \
     --exp_name "llama7b gpt_labels" \
     --y_col "pseudo_label" \
@@ -21,4 +21,4 @@ python train/pipeline7b.py \
     --eval_steps "100" \
     --remove_unused_columns False \
     --use_mlp False \
-    --push_to_hub True \
+    --push_to_hub True

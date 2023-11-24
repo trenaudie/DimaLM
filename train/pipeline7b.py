@@ -2,7 +2,6 @@
 
 ### this pipelin uses pseudo labels instead of RET as a target.
 ### Why new pipeline ? because the amount of pseudo labels is so low that train val test split does not work
-## why use a simple 0.6/0.4 train-val in this pipeline
 
 # %%
 import gc
@@ -26,7 +25,7 @@ ROOT_DIR = next(filter(
 print(f"ROOT_DIR {ROOT_DIR}")
 sys.path.append(str(ROOT_DIR))
 from dotenv import load_dotenv
-load_dotenv(ROOT_DIR / "conf.env")
+load_dotenv(ROOT_DIR / "config.env")
 
 
 from utils.stats_utils import model_memory_used, count_parameters
@@ -64,7 +63,6 @@ def train():
     args = tr.HfArgumentParser((ModelArguments, DataArguments, TrainingArguments))
     use_default_args = is_notebook() or is_debugger() 
     model_args, data_args, training_args = args.parse_args_into_dataclasses(make_default_args(use_default_args)) #replace with isnotebook(), if not debugging    model_args.device_map = "cuda:0" if training_args.deepspeed is None else None
-    assert training_args.push_to_hub == True
     model_args.device_map = "cuda:0" if training_args.deepspeed is None else None
 
 
@@ -72,7 +70,6 @@ def train():
 
 
     # %% 
-    model_args.use_causal = False 
     model = ModelWrapper(model_args, training_args)
 
     # %%

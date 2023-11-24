@@ -283,9 +283,9 @@ def load_dataset_pseudo_label(
 
     newsdf = newsdf.sort_values(by=["DATE", "SYMBOL"])
     if debug:
-        if newsdf.shape[0] > 1e5:
+        if newsdf.shape[0] > 5e4:
             symbols = newsdf.index.get_level_values("SYMBOL").unique()
-            symbols_tenth = random.sample(list(symbols), int(len(symbols) * 0.001))
+            symbols_tenth = random.sample(list(symbols), int(len(symbols) * 0.01))
             newsdf = newsdf.loc[newsdf.index.get_level_values("SYMBOL").isin(symbols_tenth)]
     news_df_train = newsdf.iloc[: int(len(newsdf) * train_fraction)]
     max_date_train = news_df_train.index.get_level_values("DATE").max()

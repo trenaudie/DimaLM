@@ -1,4 +1,4 @@
-python train/pipeline7b.py \
+python -m torch.distributed.run train/pipeline7b.py \
     --x_col "headline_no_ent_v2" \
     --exp_name "llama7B new_repo" \
     --y_col "RET_10D_pos" \

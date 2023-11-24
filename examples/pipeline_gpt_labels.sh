@@ -5,13 +5,13 @@ torchrun \
     --exp_name "llama7b gpt_labels" \
     --y_col "pseudo_label" \
     --filename_headlines  "temp_pseudo_labels_v1.3.parquet" \
-    --output_dir "results/Mistral_Relevance" \
-    --lora_dim "8" \
+    --output_dir "results/Llama_Relevance" \
+    --lora_dim "1" \
     --bf16 \
-    --model_name "mistralai/Mistral-7B-v0.1" \
+    --model_name "meta-llama/Llama-2-7b-hf" \
     --num_train_epochs "2" \
-    --per_device_train_batch_size "8" \
-    --per_device_eval_batch_size "8" \
+    --per_device_train_batch_size "4" \
+    --per_device_eval_batch_size "4" \
     --save_total_limit "1" \
     --learning_rate "0.00001" \
     --weight_decay "0.005" \

@@ -23,5 +23,21 @@
                 "${file}",
             ]
         },
+        {
+            "name": "pipeline deepspeed",
+            "type": "python",
+            "request": "launch",
+            "program": "python -m torchrun",
+            "justMyCode": false,
+            "console": "integratedTerminal",
+            "args": [
+                "--standalone",
+                 "--nnodes",
+                 "1",
+                "--nproc-per-node",
+                "2",
+                "${file}",
+            ]
+        },
     ]
 }

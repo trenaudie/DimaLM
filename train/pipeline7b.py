@@ -85,6 +85,8 @@ def train():
         y_cols_context=[data_args.y_col],
         add_context=data_args.add_context,
     )
+    # %% 
+    assert next(model.parameters()).dtype == torch.float16 or next(model.parameters()).dtype == torch.bfloat16
 
 
 
@@ -110,6 +112,8 @@ def train():
     )
 
     # %%
+    # remove neptune 
+    trainer.callback_handler.pop_callback(NeptuneCallback)
     neptune_cb = None 
     for cb in trainer.callback_handler.callbacks:
         if isinstance(cb, NeptuneCallback):

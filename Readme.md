@@ -1,16 +1,19 @@
 # LLM project RAM 
 
-This project aims to test the performance of LLMs on the news for stock market prediction. 
+This project aims to test the performance of LLMs, in speed and memory. 
+A number of optimizations are benchmarked and profiled: 
+- Gradient checkpointing, accumulation and batch size
+- Data-parallel training 
+- Model-parallel training 
+- DeepSpeed ZeRO. 
 
 An implementation of binary classification is proposed. 
 
 Details : 
-- Date Submitted 24.11.2023
-- Data : Street Account or Dow Jones
+- Date Submitted 24.06.2023 
 - Models : 
     - Llama7B, Mistral7B max for training. 
     - LLama70B for sharded training
-
 
 ### Installation 
 
@@ -26,12 +29,6 @@ For each model, you must create a config file located in models/model_confs.json
 - lora : whether the model supports lora training
 - use_flash_attention_2 : whether the model supports Flash Attention 2. Any Llama2 or Mistral variant will support Llama2 
 
-
-### Data 
-- data_preprocess/data_v3/data_utils_v3.2.ipynb : Street Account preprocessing script
-- data_preprocess/data_v6/clusters.py : Street Account clustering script, after preprocessing
-- data_preprocess/data_v6/pseudo_labels_gpt.py : Street Account GPT-Labelling script
- 
 
 ### Training 
 The training args inherit from transformers.TrainingArguments. Any argument used in TrainingArguments can be used here. 

@@ -1,4 +1,5 @@
-# LLM project RAM 
+# LLM project for CEMEF Research 
+Project done under 2nd year Mines Paris PSL studies with Prof. David Ryckelynck.
 
 This project aims to test the performance of LLMs, in speed and memory. 
 A number of optimizations are benchmarked and profiled: 

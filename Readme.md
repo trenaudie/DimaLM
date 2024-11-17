@@ -6,7 +6,8 @@ A number of optimizations are benchmarked and profiled:
 - Gradient checkpointing, accumulation and batch size
 - Data-parallel training 
 - Model-parallel training 
-- DeepSpeed ZeRO. 
+- DeepSpeed ZeRO.
+- Sharding and inference of a 70B model to run it layer-by-layer over consumer GPUs
 
 An implementation of binary classification is proposed. 
 
